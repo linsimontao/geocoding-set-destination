@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import './Map.css';
+import styles from './Map.module.css';
 import { useGoogleMap } from '../hooks/useGoogleMap';
 import { useGeocodingAPI } from '../hooks/useGeocodingAPI';
 
@@ -14,7 +14,7 @@ export const Map = () => {
 
     return (
         <>
-            <div className="place-autocomplete-card" id="place-autocomplete-card">
+            <div className={styles.placeAutocompleteCard} id="place-autocomplete-card">
                 <p>Search for a place here:</p>
             </div>
             <div ref={ref} id="map" />

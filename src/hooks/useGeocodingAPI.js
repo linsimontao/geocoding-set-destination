@@ -124,8 +124,10 @@ export const useGeocodingAPI = () => {
         if (map && np?.length > 0) {
             const markerArr = np.map(navigationPoint => {
                 const navigationPointElement = document.createElement("span");
-                navigationPointElement.className = "dot";
-                navigationPointElement.style.backgroundColor = 'black'; // default
+                // This class is for basic shape; color is applied directly below.
+                // A global class ".dot" could be defined in index.css if preferred.
+                navigationPointElement.style.cssText = "height: 10px; width: 10px; background-color: black; border-radius: 50%; display: inline-block;";
+                
                 if (navigationPoint.restricted_travel_modes) {
                     switch (navigationPoint.restricted_travel_modes[0]) {
                         case 'DRIVE':

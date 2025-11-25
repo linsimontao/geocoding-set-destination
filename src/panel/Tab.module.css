@@ -1,0 +1,115 @@
+.tabinator {
+  padding: 20px;
+  height: 100%; /* Changed from 90% to fill container */
+  display: flex;
+  flex-direction: column;
+}
+
+.tabinator h2 {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.tabInput {
+  display: none;
+}
+
+.tabLabel {
+  box-sizing: border-box;
+  display: inline-block;
+  padding: 15px 25px;
+  color: var(--text-color-light);
+  margin-bottom: -1px;
+  margin-left: -1px;
+}
+
+.tabLabel:hover {
+  color: #888;
+  cursor: pointer;
+}
+
+.tabInput:checked + .tabLabel {
+  position: relative;
+  color: var(--text-color-dark);
+  border: 1px solid var(--border-color);
+  border-bottom: 1px solid #fff;
+  border-radius: 5px 5px 0 0;
+}
+
+.tabInput:checked + .tabLabel:after {
+  display: block;
+  content: '';
+  position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
+  box-shadow: 0 0 15px #939393;
+}
+
+.content {
+  border-top: 1px solid var(--border-color);
+  padding: 15px;
+  height: 100%;
+  box-shadow: 0 0 15px #939393;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.primary {
+  padding: 20px;
+}
+
+.destinationsList {
+  overflow-y: scroll;
+  height: 100%;
+}
+
+.destinationCard, .destinationCardSelected {
+  border: 1px solid var(--border-color);
+  padding: 20px;
+  margin: 10px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.destinationCard:hover {
+  border-color: var(--primary-border-color);
+  box-shadow: 0 0 10px var(--primary-shadow-color);
+  background-color: var(--card-hover-bg);
+}
+
+.destinationCardSelected {
+  border-color: var(--primary-border-color);
+  box-shadow: 0 0 10px var(--primary-shadow-color);
+  background-color: var(--card-hover-bg);
+}
+
+.legend {
+    padding: 20px;
+    list-style-type: none;
+}
+
+.legend li {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.legend span {
+    height: 10px;
+    width: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 10px;
+}
+
+.walk {
+    background-color: var(--walk-color);
+}
+
+.drive {
+    background-color: var(--drive-color);
+}
+
+.both {
+    background-color: var(--both-color);
+}

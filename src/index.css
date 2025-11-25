@@ -1,0 +1,28 @@
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css?family=Open+Sans:400,600,700');
+
+/* Define global color variables */
+:root {
+  --drive-color: blue;
+  --walk-color: green;
+  --both-color: black;
+  --primary-border-color: #007bff;
+  --primary-shadow-color: rgba(0, 123, 255, 0.5);
+  --card-hover-bg: #f8f9fa;
+  --text-color-light: #ccc;
+  --text-color-dark: #000;
+  --border-color: #bbb;
+  --body-bg: #E5E4E2;
+}
+
+/* Universal box-sizing and reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--body-bg);
+  font-family: 'Open Sans', sans-serif;
+}

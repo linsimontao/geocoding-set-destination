@@ -1,13 +1,13 @@
 import React from 'react'
 import Tab from './Tab'
-import './Panel.css'
+import styles from './Panel.module.css'
 import { useMap } from '../context/MapContext'
 
 function Panel() {
     const { primaryDestination } = useMap();
     return (
         primaryDestination ?
-            <div id="container">
+            <div className={styles.container}>
                 <Tab />
             </div > : <></>
     )
