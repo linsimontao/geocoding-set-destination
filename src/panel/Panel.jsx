@@ -1,13 +1,15 @@
 import React from 'react'
 import Tab from './Tab'
 import './Panel.css'
+import { useMap } from '../context/MapContext'
 
-function Panel({ primaryDestination, subDestinations, selectedCardId, setSelectedCardId, activeTab, setActiveTab }) {
+function Panel() {
+    const { primaryDestination } = useMap();
     return (
-        primaryDestination? 
-            <div id = "container">
-                <Tab primaryDestination={primaryDestination} subDestinations = {subDestinations} selectedCardId={selectedCardId} setSelectedCardId={setSelectedCardId} activeTab={activeTab} setActiveTab={setActiveTab}/> 
-            </div >:<></>
+        primaryDestination ?
+            <div id="container">
+                <Tab />
+            </div > : <></>
     )
 }
 

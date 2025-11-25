@@ -1,18 +1,29 @@
-import React, { useState } from 'react'
+import React from 'react'
 import './Tab.css'
-function Tab({ primaryDestination, subDestinations, selectedCardId, setSelectedCardId, activeTab, setActiveTab }) {
+import { useMap } from '../context/MapContext'
+
+function Tab() {
+    const {
+        primaryDestination,
+        subDestinations,
+        selectedCardId,
+        setSelectedCardId,
+        activeTab,
+        setActiveTab
+    } = useMap();
+
     const cardClick = (evt) => {
         setSelectedCardId(evt.target.id);
     }
     return (
         <div class="tabinator">
             <h2>Geocoding Result</h2>
-            <input className="tab" type="radio" id="tab1" name="tabs" checked={activeTab === 'tab1'} onClick={() => { setActiveTab('tab1') }} />
+            <input className="tab" type="radio" id="tab1" name="tabs" checked={activeTab === 'tab1'} onChange={() => { setActiveTab('tab1') }} />
             <label className="tab-label" for="tab1">Primary</label>
-            <input className="tab" type="radio" id="tab2" name="tabs" checked={activeTab === 'tab2'} onClick={() => { setActiveTab('tab2') }} />
+            <input className="tab" type="radio" id="tab2" name="tabs" checked={activeTab === 'tab2'} onChange={() => { setActiveTab('tab2') }} />
             <label className="tab-label" for="tab2">Sub</label>
 
-            <div id="content1">
+            <div id="content1" style={{ display: activeTab === 'tab1' ? 'block' : 'none' }}>
                 <div className="primary">
                     {primaryDestination.displayName ? <p><strong>Name: </strong> {primaryDestination.displayName.text}</p> : <></>}
                     <p><strong>Structure Type: </strong>{primaryDestination.structureType}</p>
@@ -25,12 +36,12 @@ function Tab({ primaryDestination, subDestinations, selectedCardId, setSelectedC
                     <li><span className='both'></span>BOTH</li>
                 </ul>
             </div>
-            <div id="content2">
+            <div id="content2" style={{ display: activeTab === 'tab2' ? 'block' : 'none' }}>
                 <div className="destinations-list">
                     {
                         subDestinations.map((dest, i) => {
                             return (
-                                <div id={i} className={(selectedCardId === String(i)) ? "destination-card-selected" : "destination-card"} onClick={(evt) => cardClick(evt)}>
+                                <div id={i} key={i} className={(selectedCardId === String(i)) ? "destination-card-selected" : "destination-card"} onClick={(evt) => cardClick(evt)}>
                                     {dest.displayName ? <p id={i}><strong>Name: </strong> {dest.displayName.text}</p> : <></>}
                                     <p id={i}><strong>Structure Type: </strong>{dest.structureType}</p>
                                     <p id={i}><strong>Address: </strong> {dest.formattedAddress}</p>
