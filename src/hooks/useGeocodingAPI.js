@@ -18,8 +18,8 @@ export const useGeocodingAPI = () => {
         if (!map) return;
 
         const placeAutocomplete = new window.google.maps.places.PlaceAutocompleteElement({
-            requestedLanguage: "ja",
-            requestedRegion: "jp"
+            // requestedLanguage: "ja"
+            // requestedRegion: "jp"
         });
         placeAutocomplete.id = "place-autocomplete-input";
 
@@ -30,10 +30,12 @@ export const useGeocodingAPI = () => {
 
         const handleSelect = async ({ placePrediction }) => {
             const place = placePrediction.toPlace();
-            await place.fetchFields({
+            const res = await place.fetchFields({
                 fields: ["displayName", "formattedAddress", "location"],
             });
-            setAutocompleteResult(place.Dg);
+            // console.log(res);
+            // console.log(place)
+            setAutocompleteResult(place.toJSON());
         };
 
         placeAutocomplete.addEventListener("gmp-select", handleSelect);
