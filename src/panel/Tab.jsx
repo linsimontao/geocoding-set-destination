@@ -80,9 +80,11 @@ function Tab() {
                         <DestinationDetails destination={primaryDestination} />
                     </div>
                     <ul className={styles.legend}>
-                        <li><span className={styles.walk}></span>WALK</li>
-                        <li><span className={styles.drive}></span>DRIVE</li>
-                        <li><span className={styles.both}></span>BOTH</li>
+                        <li><span className={styles.dropoff}></span>DROPOFF</li>
+                        <li><span className={styles.pickup}></span>PICKUP</li>
+                        <li><span className={styles.parking}></span>PARKING</li>
+                        <li><span className={styles.multipleUsage}></span>MULTIPLE USAGES</li>
+                        <li><span className={styles.noUsage}></span>NO USAGE</li>
                         <li><span className={styles.entrance}></span>ENTRANCE</li>
                     </ul>
                 </div>

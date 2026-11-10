@@ -108,16 +108,24 @@
     margin-right: 10px;
 }
 
-.walk {
-    background-color: var(--walk-color);
+.dropoff {
+    background-color: var(--dropoff-color);
 }
 
-.drive {
-    background-color: var(--drive-color);
+.pickup {
+    background-color: var(--pickup-color);
 }
 
-.both {
-    background-color: var(--both-color);
+.parking {
+    background-color: var(--parking-color);
+}
+
+.multipleUsage {
+    background-color: var(--multiple-usage-color);
+}
+
+.noUsage {
+    background-color: var(--no-usage-color);
 }
 
 .legend span.entrance {
