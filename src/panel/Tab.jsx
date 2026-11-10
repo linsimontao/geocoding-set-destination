@@ -2,10 +2,26 @@ import React from 'react';
 import styles from './Tab.module.css';
 import { useMap } from '../context/MapContext';
 
+// Renders a destination's details, skipping any field the API didn't return.
+function DestinationDetails({ destination }) {
+    const { displayName, structureType, formattedAddress, types } = destination ?? {};
+    return (
+        <>
+            {displayName?.text && <p><strong>Name: </strong> {displayName.text}</p>}
+            {structureType && <p><strong>Structure Type: </strong>{structureType}</p>}
+            {formattedAddress && <p><strong>Address: </strong> {formattedAddress}</p>}
+            {types?.length > 0 && <p><strong>Type: </strong> {types.join(', ')}</p>}
+        </>
+    );
+}
+
 function Tab() {
     const {
         primaryDestination,
         subDestinations,
+        containingPlaces,
+        selectedContainingId,
+        setSelectedContainingId,
         selectedCardId,
         setSelectedCardId,
         activeTab,
@@ -15,6 +31,12 @@ function Tab() {
     const cardClick = (evt) => {
         // Get the id from the dataset attribute
         setSelectedCardId(evt.currentTarget.dataset.id);
+    }
+
+    // Clicking a containing place shows its polygon; clicking it again hides it.
+    const containingCardClick = (i) => {
+        const id = String(i);
+        setSelectedContainingId(selectedContainingId === id ? null : id);
     }
 
     return (
@@ -40,20 +62,28 @@ function Tab() {
                     onChange={() => setActiveTab('tab2')} 
                 />
                 <label className={styles.tabLabel} htmlFor="tab2">Sub</label>
+
+                <input 
+                    className={styles.tabInput} 
+                    type="radio" 
+                    id="tab3" 
+                    name="tabs" 
+                    checked={activeTab === 'tab3'} 
+                    onChange={() => setActiveTab('tab3')} 
+                />
+                <label className={styles.tabLabel} htmlFor="tab3">Upper Level</label>
             </div>
 
             {activeTab === 'tab1' && (
                 <div className={styles.content}>
                     <div className={styles.primary}>
-                        {primaryDestination.displayName && <p><strong>Name: </strong> {primaryDestination.displayName.text}</p>}
-                        <p><strong>Structure Type: </strong>{primaryDestination.structureType}</p>
-                        <p><strong>Address: </strong> {primaryDestination.formattedAddress}</p>
-                        <p><strong>Type: </strong> {primaryDestination.types.join(', ')}</p>
+                        <DestinationDetails destination={primaryDestination} />
                     </div>
                     <ul className={styles.legend}>
                         <li><span className={styles.walk}></span>WALK</li>
                         <li><span className={styles.drive}></span>DRIVE</li>
                         <li><span className={styles.both}></span>BOTH</li>
+                        <li><span className={styles.entrance}></span>ENTRANCE</li>
                     </ul>
                 </div>
             )}
@@ -61,6 +91,9 @@ function Tab() {
             {activeTab === 'tab2' && (
                 <div className={styles.content}>
                     <div className={styles.destinationsList}>
+                        {subDestinations.length === 0 && (
+                            <p className={styles.empty}>No sub-destinations for this place.</p>
+                        )}
                         {subDestinations.map((dest, i) => (
                             <div 
                                 key={i} 
@@ -68,10 +101,25 @@ function Tab() {
                                 className={selectedCardId === String(i) ? styles.destinationCardSelected : styles.destinationCard} 
                                 onClick={cardClick}
                             >
-                                {dest.displayName && <p><strong>Name: </strong> {dest.displayName.text}</p>}
-                                <p><strong>Structure Type: </strong>{dest.structureType}</p>
-                                <p><strong>Address: </strong> {dest.formattedAddress}</p>
-                                <p><strong>Type: </strong> {dest.types.join(', ')}</p>
+                                <DestinationDetails destination={dest} />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {activeTab === 'tab3' && (
+                <div className={styles.content}>
+                    {/* Left blank when the response has no containingPlaces */}
+                    <div className={styles.destinationsList}>
+                        {containingPlaces.map((place, i) => (
+                            <div
+                                key={i}
+                                className={selectedContainingId === String(i) ? styles.containingCardSelected : styles.containingCard}
+                                onClick={() => containingCardClick(i)}
+                            >
+                                {place.structureType && <p><strong>Structure Type: </strong>{place.structureType}</p>}
+                                {place.formattedAddress && <p><strong>Address: </strong> {place.formattedAddress}</p>}
                             </div>
                         ))}
                     </div>
