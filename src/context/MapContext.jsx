@@ -11,6 +11,11 @@ export const MapProvider = ({ children }) => {
   const [selectedContainingId, setSelectedContainingId] = useState(null);
   const [selectedCardId, setSelectedCardId] = useState(null);
   const [activeTab, setActiveTab] = useState('tab1');
+  // Navigation points + entrances currently drawn on the map
+  // (the primary place's, or the clicked Sub / Upper Level item's).
+  const [accessPoints, setAccessPoints] = useState({ navigationPoints: [], entrances: [] });
+  // Index (as a string) of the navigation point card selected in the panel.
+  const [selectedNavPointId, setSelectedNavPointId] = useState(null);
   const [map, setMap] = useState(null);
   const [marker, setMarker] = useState(null);
 
@@ -28,6 +33,10 @@ export const MapProvider = ({ children }) => {
     setSelectedCardId,
     activeTab,
     setActiveTab,
+    accessPoints,
+    setAccessPoints,
+    selectedNavPointId,
+    setSelectedNavPointId,
     map,
     setMap,
     marker,

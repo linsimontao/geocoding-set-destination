@@ -3,9 +3,12 @@
 
 /* Define global color variables */
 :root {
-  --drive-color: blue;
-  --walk-color: green;
-  --both-color: black;
+  /* Navigation point colours, by `usages` */
+  --dropoff-color: #1E88E5;
+  --pickup-color: #43A047;
+  --parking-color: #8E24AA;
+  --multiple-usage-color: #000;
+  --no-usage-color: #9E9E9E;
   --containing-color: #FF8C00;
   --entrance-color: #E53935;
   --primary-border-color: #007bff;

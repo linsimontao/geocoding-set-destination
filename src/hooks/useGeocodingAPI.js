@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useMap } from '../context/MapContext';
 
 const apiKey = import.meta.env.VITE_GOOGLEMAPS_API_KEY;
@@ -22,10 +22,22 @@ const ACCESS_POINTS_FIELD_MASK = 'destinations.navigationPoints,destinations.ent
 const EMPTY_ACCESS_POINTS = { navigationPoints: [], entrances: [] };
 
 // Colours match the legend in the panel (see index.css variables).
-const TRAVEL_MODE_COLORS = {
-    DRIVE: 'var(--drive-color)',
-    WALK: 'var(--walk-color)',
-    BOTH: 'var(--both-color)',
+export const USAGE_COLORS = {
+    DROPOFF: 'var(--dropoff-color)',
+    PICKUP: 'var(--pickup-color)',
+    PARKING: 'var(--parking-color)',
+    MULTIPLE: 'var(--multiple-usage-color)',
+    NONE: 'var(--no-usage-color)',
+};
+
+/**
+ * Resolves 'var(--name)' to its computed value. PinElement renders SVG, whose
+ * fill attributes can't use CSS variables.
+ */
+const resolveCssColor = (color) => {
+    const match = color.match(/^var\((--[\w-]+)\)$/);
+    if (!match) return color;
+    return getComputedStyle(document.documentElement).getPropertyValue(match[1]).trim() || color;
 };
 
 /**
@@ -42,17 +54,28 @@ const toLatLngPaths = (geoJson) => {
 };
 
 /**
- * Returns 'DRIVE', 'WALK' or 'BOTH' for a navigation point.
- * REST JSON uses camelCase (`restrictedTravelModes`); the snake_case form is
- * accepted as a fallback.
+ * Returns the legend category for a navigation point based on its `usages`:
+ * 'DROPOFF', 'PICKUP' or 'PARKING' when it has exactly one usage,
+ * 'MULTIPLE' when it has several, and 'NONE' when no usage is returned.
  */
-const getTravelMode = (navigationPoint) => {
-    const modes = navigationPoint.restrictedTravelModes ?? navigationPoint.restricted_travel_modes ?? [];
-    const drive = modes.includes('DRIVE');
-    const walk = modes.includes('WALK');
-    if (drive && !walk) return 'DRIVE';
-    if (walk && !drive) return 'WALK';
-    return 'BOTH';
+export const getUsageCategory = (navigationPoint) => {
+    const usages = navigationPoint.usages ?? [];
+    if (usages.length === 0) return 'NONE';
+    if (usages.length > 1) return 'MULTIPLE';
+    return USAGE_COLORS[usages[0]] ? usages[0] : 'NONE';
+};
+
+/**
+ * Parses a "lat,lng" string (e.g. "35.6812, 139.7671").
+ * Returns { lat, lng } or null when the input is not a valid coordinate pair.
+ */
+export const parseLatLng = (text) => {
+    const match = text?.trim().match(/^(-?\d+(?:\.\d+)?)\s*[,\s]\s*(-?\d+(?:\.\d+)?)$/);
+    if (!match) return null;
+    const lat = Number(match[1]);
+    const lng = Number(match[2]);
+    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return null;
+    return { lat, lng };
 };
 
 /**
@@ -69,9 +92,10 @@ const getPlaceResourceName = (item) => {
 };
 
 /**
- * Calls Search Destinations for a place and returns the first destination (or null).
+ * Calls Search Destinations and returns the first destination (or null).
+ * `requestBody` is either { place: 'places/...' } or { locationQuery: { location: {...} } }.
  */
-const searchDestinations = async (placeResourceName, fieldMask, signal) => {
+const searchDestinations = async (requestBody, fieldMask, signal) => {
     const response = await fetch(DESTINATIONS_ENDPOINT, {
         method: 'POST',
         signal,
@@ -81,7 +105,7 @@ const searchDestinations = async (placeResourceName, fieldMask, signal) => {
             'X-Goog-FieldMask': fieldMask,
             'X-Goog-Maps-Solution-ID': 'gmp_git_agentskills_v1',
         },
-        body: JSON.stringify({ place: placeResourceName }),
+        body: JSON.stringify(requestBody),
     });
     if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status} ${await response.text()}`);
@@ -104,13 +128,17 @@ export const useGeocodingAPI = () => {
         selectedCardId,
         setSelectedCardId,
         activeTab,
+        accessPoints,
+        setAccessPoints,
+        selectedNavPointId,
+        setSelectedNavPointId,
     } = useMap();
-    const [selectedPlace, setSelectedPlace] = useState(null);
+    // The current search: { requestBody, location } built from either an
+    // Autocomplete selection (place ID) or a typed "lat,lng" (location query).
+    const [query, setQuery] = useState(null);
     const [displayPolygon, setDisplayPolygon] = useState(null);
     // Navigation points + entrances of the searched (primary) place.
     const [primaryAccessPoints, setPrimaryAccessPoints] = useState(EMPTY_ACCESS_POINTS);
-    // Navigation points + entrances currently drawn on the map.
-    const [accessPoints, setAccessPoints] = useState(EMPTY_ACCESS_POINTS);
     const { navigationPoints, entrances } = accessPoints;
     // Cache of access points fetched for clicked items, keyed by place resource name.
     const accessPointsCache = useRef(new Map());
@@ -118,8 +146,8 @@ export const useGeocodingAPI = () => {
     // Autocomplete setup effect
     useEffect(() => {
         if (!map) return;
-        const card = document.getElementById('place-autocomplete-card');
-        if (!card) return;
+        const container = document.getElementById('place-autocomplete-container');
+        if (!container) return;
 
         const placeAutocomplete = new window.google.maps.places.PlaceAutocompleteElement({
             // requestedLanguage: "ja"
@@ -133,14 +161,15 @@ export const useGeocodingAPI = () => {
                 await place.fetchFields({
                     fields: ['displayName', 'formattedAddress', 'location'],
                 });
-                setSelectedPlace(place.toJSON());
+                const { id, location } = place.toJSON();
+                setQuery({ requestBody: { place: `places/${id}` }, location });
             } catch (error) {
                 console.error('Error fetching place details:', error);
             }
         };
 
         placeAutocomplete.addEventListener('gmp-select', handleSelect);
-        card.appendChild(placeAutocomplete);
+        container.appendChild(placeAutocomplete);
 
         // Cleanup also makes StrictMode's double-invoke safe (no duplicate inputs).
         return () => {
@@ -149,13 +178,13 @@ export const useGeocodingAPI = () => {
         };
     }, [map]);
 
-    // Fetch destinations when a new place is selected
+    // Fetch destinations when a new search (place or lat,lng) is submitted
     useEffect(() => {
-        if (!map || !marker || !selectedPlace) return;
+        if (!map || !marker || !query) return;
 
-        if (selectedPlace.location) {
-            map.moveCamera({ center: selectedPlace.location });
-            marker.position = selectedPlace.location;
+        if (query.location) {
+            map.moveCamera({ center: query.location });
+            marker.position = query.location;
         }
 
         // Clear the previous result so nothing stale stays on the map or panel.
@@ -175,12 +204,12 @@ export const useGeocodingAPI = () => {
         const fetchDestinations = async () => {
             try {
                 const destination = await searchDestinations(
-                    `places/${selectedPlace.id}`,
+                    query.requestBody,
                     DESTINATIONS_FIELD_MASK,
                     controller.signal,
                 );
                 if (!destination) {
-                    console.warn('No destinations returned for', selectedPlace.id);
+                    console.warn('No destinations returned for', query.requestBody);
                     return;
                 }
                 setPrimaryDestination(destination.primary ?? null);
@@ -199,7 +228,7 @@ export const useGeocodingAPI = () => {
 
         fetchDestinations();
         return () => controller.abort();
-    }, [map, marker, selectedPlace, setPrimaryDestination, setSubDestinations, setContainingPlaces, setSelectedContainingId, setSelectedCardId]);
+    }, [map, marker, query, setPrimaryDestination, setSubDestinations, setContainingPlaces, setSelectedContainingId, setSelectedCardId]);
 
     // The item clicked in the active tab (Sub or Upper Level), if any.
     const selectedItem =
@@ -231,7 +260,7 @@ export const useGeocodingAPI = () => {
         }
 
         const controller = new AbortController();
-        searchDestinations(selectedItemPlace, ACCESS_POINTS_FIELD_MASK, controller.signal)
+        searchDestinations({ place: selectedItemPlace }, ACCESS_POINTS_FIELD_MASK, controller.signal)
             .then((destination) => {
                 const result = {
                     navigationPoints: destination?.navigationPoints ?? [],
@@ -245,13 +274,43 @@ export const useGeocodingAPI = () => {
                 console.error('Error fetching navigation points / entrances for', selectedItemPlace, error);
             });
         return () => controller.abort();
-    }, [hasSelectedItem, selectedItemPlace, primaryAccessPoints]);
+    }, [hasSelectedItem, selectedItemPlace, primaryAccessPoints, setAccessPoints]);
+
+    // A new set of navigation points invalidates the selected navigation point card.
+    useEffect(() => {
+        setSelectedNavPointId(null);
+    }, [accessPoints, setSelectedNavPointId]);
+
+    // Highlight the navigation point selected in the panel with a pin marker.
+    useEffect(() => {
+        if (!map || selectedNavPointId == null) return;
+        const point = navigationPoints[Number(selectedNavPointId)];
+        if (!point?.location) return;
+        const position = { lat: point.location.latitude, lng: point.location.longitude };
+        const pin = new window.google.maps.marker.PinElement({
+            background: resolveCssColor(USAGE_COLORS[getUsageCategory(point)]),
+            borderColor: '#fff',
+            glyphText: String(Number(selectedNavPointId) + 1),
+            glyphColor: '#fff',
+        });
+        const selectedMarker = new window.google.maps.marker.AdvancedMarkerElement({
+            map,
+            position,
+            content: pin.element,
+            title: `Navigation point ${Number(selectedNavPointId) + 1}`,
+            zIndex: 1000,
+        });
+        map.panTo(position);
+        return () => { selectedMarker.map = null; };
+    }, [map, navigationPoints, selectedNavPointId]);
 
     // Draw primary destination polygon
     useEffect(() => {
         if (!map || !displayPolygon) return;
         const polygon = new window.google.maps.Polygon({
             map,
+            // Let clicks fall through to the map (click-to-search).
+            clickable: false,
             paths: toLatLngPaths(displayPolygon),
             strokeColor: '#FF0000',
             strokeOpacity: 0.8,
@@ -267,15 +326,19 @@ export const useGeocodingAPI = () => {
         const markers = navigationPoints
             .filter((point) => point.location)
             .map((point) => {
-                const mode = getTravelMode(point);
+                const category = getUsageCategory(point);
+                const usages = point.usages ?? [];
+                const travelModes = point.travelModes ?? [];
                 const dot = document.createElement('span');
                 dot.style.cssText = 'height: 10px; width: 10px; border-radius: 50%; display: inline-block;';
-                dot.style.backgroundColor = TRAVEL_MODE_COLORS[mode];
+                dot.style.backgroundColor = USAGE_COLORS[category];
                 return new window.google.maps.marker.AdvancedMarkerElement({
                     map,
                     position: { lat: point.location.latitude, lng: point.location.longitude },
                     content: dot,
-                    title: `Navigation point (${mode})`,
+                    title:
+                        `Navigation point (usages: ${usages.length > 0 ? usages.join(', ') : 'none'}` +
+                        (travelModes.length > 0 ? `; travel modes: ${travelModes.join(', ')})` : ')'),
                 });
             });
         // AdvancedMarkerElement has no setMap(); remove it by clearing `map`.
@@ -313,6 +376,8 @@ export const useGeocodingAPI = () => {
             .filter((subDestination) => subDestination.displayPolygon?.coordinates)
             .map((subDestination) => new window.google.maps.Polygon({
                 map,
+                // Let clicks fall through to the map (click-to-search).
+                clickable: false,
                 paths: toLatLngPaths(subDestination.displayPolygon),
                 strokeColor: '#FF00FF',
                 strokeOpacity: 0.8,
@@ -331,6 +396,8 @@ export const useGeocodingAPI = () => {
         const paths = toLatLngPaths(place.displayPolygon);
         const polygon = new window.google.maps.Polygon({
             map,
+            // Let clicks fall through to the map (click-to-search).
+            clickable: false,
             paths,
             strokeColor: '#FF8C00',
             strokeOpacity: 0.9,
@@ -354,4 +421,14 @@ export const useGeocodingAPI = () => {
         if (!location) return;
         marker.position = { lat: location.latitude, lng: location.longitude };
     }, [map, marker, selectedCardId, subDestinations]);
+
+    // Search Destinations by coordinates (locationQuery).
+    const searchByLatLng = useCallback(({ lat, lng }) => {
+        setQuery({
+            requestBody: { locationQuery: { location: { latitude: lat, longitude: lng } } },
+            location: { lat, lng },
+        });
+    }, []);
+
+    return { searchByLatLng };
 };

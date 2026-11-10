@@ -17,3 +17,68 @@
 gmp-place-autocomplete {
     width: 600px;
 }
+
+.latLngForm {
+    display: flex;
+    gap: 8px;
+}
+
+.latLngInput {
+    flex: 1;
+    padding: 8px 12px;
+    font-size: medium;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+}
+
+.latLngButton {
+    padding: 8px 16px;
+    font-size: medium;
+    color: #fff;
+    background-color: var(--primary-border-color);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.latLngError {
+    color: var(--entrance-color);
+    font-size: small;
+    font-weight: normal;
+    margin-top: 4px;
+}
+/* Input tabs: Place search / Lat,Lng */
+.inputTabs {
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 8px;
+}
+
+.inputTab, .inputTabActive {
+    padding: 8px 16px;
+    font-family: inherit;
+    font-size: medium;
+    font-weight: bold;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -1px;
+    cursor: pointer;
+}
+
+.inputTab {
+    color: #888;
+}
+
+.inputTab:hover {
+    color: var(--text-color-dark);
+}
+
+.inputTabActive {
+    color: var(--primary-border-color);
+    border-bottom-color: var(--primary-border-color);
+}
+
+.inputPanel[hidden] {
+    display: none;
+}
