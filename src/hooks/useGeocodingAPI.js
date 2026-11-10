@@ -22,12 +22,22 @@ const ACCESS_POINTS_FIELD_MASK = 'destinations.navigationPoints,destinations.ent
 const EMPTY_ACCESS_POINTS = { navigationPoints: [], entrances: [] };
 
 // Colours match the legend in the panel (see index.css variables).
-const USAGE_COLORS = {
+export const USAGE_COLORS = {
     DROPOFF: 'var(--dropoff-color)',
     PICKUP: 'var(--pickup-color)',
     PARKING: 'var(--parking-color)',
     MULTIPLE: 'var(--multiple-usage-color)',
     NONE: 'var(--no-usage-color)',
+};
+
+/**
+ * Resolves 'var(--name)' to its computed value. PinElement renders SVG, whose
+ * fill attributes can't use CSS variables.
+ */
+const resolveCssColor = (color) => {
+    const match = color.match(/^var\((--[\w-]+)\)$/);
+    if (!match) return color;
+    return getComputedStyle(document.documentElement).getPropertyValue(match[1]).trim() || color;
 };
 
 /**
@@ -48,7 +58,7 @@ const toLatLngPaths = (geoJson) => {
  * 'DROPOFF', 'PICKUP' or 'PARKING' when it has exactly one usage,
  * 'MULTIPLE' when it has several, and 'NONE' when no usage is returned.
  */
-const getUsageCategory = (navigationPoint) => {
+export const getUsageCategory = (navigationPoint) => {
     const usages = navigationPoint.usages ?? [];
     if (usages.length === 0) return 'NONE';
     if (usages.length > 1) return 'MULTIPLE';
@@ -118,6 +128,10 @@ export const useGeocodingAPI = () => {
         selectedCardId,
         setSelectedCardId,
         activeTab,
+        accessPoints,
+        setAccessPoints,
+        selectedNavPointId,
+        setSelectedNavPointId,
     } = useMap();
     // The current search: { requestBody, location } built from either an
     // Autocomplete selection (place ID) or a typed "lat,lng" (location query).
@@ -125,8 +139,6 @@ export const useGeocodingAPI = () => {
     const [displayPolygon, setDisplayPolygon] = useState(null);
     // Navigation points + entrances of the searched (primary) place.
     const [primaryAccessPoints, setPrimaryAccessPoints] = useState(EMPTY_ACCESS_POINTS);
-    // Navigation points + entrances currently drawn on the map.
-    const [accessPoints, setAccessPoints] = useState(EMPTY_ACCESS_POINTS);
     const { navigationPoints, entrances } = accessPoints;
     // Cache of access points fetched for clicked items, keyed by place resource name.
     const accessPointsCache = useRef(new Map());
@@ -262,7 +274,35 @@ export const useGeocodingAPI = () => {
                 console.error('Error fetching navigation points / entrances for', selectedItemPlace, error);
             });
         return () => controller.abort();
-    }, [hasSelectedItem, selectedItemPlace, primaryAccessPoints]);
+    }, [hasSelectedItem, selectedItemPlace, primaryAccessPoints, setAccessPoints]);
+
+    // A new set of navigation points invalidates the selected navigation point card.
+    useEffect(() => {
+        setSelectedNavPointId(null);
+    }, [accessPoints, setSelectedNavPointId]);
+
+    // Highlight the navigation point selected in the panel with a pin marker.
+    useEffect(() => {
+        if (!map || selectedNavPointId == null) return;
+        const point = navigationPoints[Number(selectedNavPointId)];
+        if (!point?.location) return;
+        const position = { lat: point.location.latitude, lng: point.location.longitude };
+        const pin = new window.google.maps.marker.PinElement({
+            background: resolveCssColor(USAGE_COLORS[getUsageCategory(point)]),
+            borderColor: '#fff',
+            glyphText: String(Number(selectedNavPointId) + 1),
+            glyphColor: '#fff',
+        });
+        const selectedMarker = new window.google.maps.marker.AdvancedMarkerElement({
+            map,
+            position,
+            content: pin.element,
+            title: `Navigation point ${Number(selectedNavPointId) + 1}`,
+            zIndex: 1000,
+        });
+        map.panTo(position);
+        return () => { selectedMarker.map = null; };
+    }, [map, navigationPoints, selectedNavPointId]);
 
     // Draw primary destination polygon
     useEffect(() => {
