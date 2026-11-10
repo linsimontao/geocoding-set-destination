@@ -38,7 +38,7 @@ export const Map = () => {
         evt.preventDefault();
         const latLng = parseLatLng(latLngText);
         if (!latLng) {
-            setLatLngError('Enter coordinates as "lat,lng", e.g. 35.6812,139.7671');
+            setLatLngError('Enter coordinates as "lat,lng", e.g. -23.5513657,-46.6344352');
             return;
         }
         setLatLngError('');
@@ -83,7 +83,7 @@ export const Map = () => {
                         <input
                             className={styles.latLngInput}
                             type="text"
-                            placeholder="35.6812,139.7671"
+                            placeholder="-23.5513657,-46.6344352"
                             value={latLngText}
                             onChange={(evt) => setLatLngText(evt.target.value)}
                         />

@@ -11,8 +11,8 @@ const loader = new Loader({
 
 const mapOptions = {
     center: {
-        lat: 35.6819677,
-        lng: 139.7614256
+        lat: -23.5513657,
+        lng: -46.6344352
     },
     mapTypeControl: false,
     fullscreenControl: false,
@@ -38,7 +38,7 @@ export const useGoogleMap = (ref) => {
                 markerView = new google.maps.marker.AdvancedMarkerElement({
                     map,
                     position: mapOptions.center,
-                    title: 'Tokyo',
+                    title: 'São Paulo',
                 });
                 setMap(map);
                 setMarker(markerView);

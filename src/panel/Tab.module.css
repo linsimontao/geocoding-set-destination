@@ -89,50 +89,6 @@
   background-color: var(--card-hover-bg);
 }
 
-.legend {
-    padding: 20px;
-    list-style-type: none;
-}
-
-.legend li {
-  display: flex;
-  align-items: center;
-  margin-bottom: 5px;
-}
-
-.legend span {
-    height: 10px;
-    width: 10px;
-    border-radius: 50%;
-    display: inline-block;
-    margin-right: 10px;
-}
-
-.dropoff {
-    background-color: var(--dropoff-color);
-}
-
-.pickup {
-    background-color: var(--pickup-color);
-}
-
-.parking {
-    background-color: var(--parking-color);
-}
-
-.multipleUsage {
-    background-color: var(--multiple-usage-color);
-}
-
-.noUsage {
-    background-color: var(--no-usage-color);
-}
-
-.legend span.entrance {
-    background-color: var(--entrance-color);
-    border-radius: 2px;
-}
-
 /* Containing place cards: click to show that place's polygon on the map. */
 .containingCard, .containingCardSelected {
   border: 1px solid var(--border-color);
