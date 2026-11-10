@@ -7,6 +7,8 @@ const MapContext = createContext();
 export const MapProvider = ({ children }) => {
   const [primaryDestination, setPrimaryDestination] = useState(null);
   const [subDestinations, setSubDestinations] = useState([]);
+  const [containingPlaces, setContainingPlaces] = useState([]);
+  const [selectedContainingId, setSelectedContainingId] = useState(null);
   const [selectedCardId, setSelectedCardId] = useState(null);
   const [activeTab, setActiveTab] = useState('tab1');
   const [map, setMap] = useState(null);
@@ -18,6 +20,10 @@ export const MapProvider = ({ children }) => {
     setPrimaryDestination,
     subDestinations,
     setSubDestinations,
+    containingPlaces,
+    setContainingPlaces,
+    selectedContainingId,
+    setSelectedContainingId,
     selectedCardId,
     setSelectedCardId,
     activeTab,

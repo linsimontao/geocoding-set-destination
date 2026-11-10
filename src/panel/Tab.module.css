@@ -17,7 +17,7 @@
 .tabLabel {
   box-sizing: border-box;
   display: inline-block;
-  padding: 15px 25px;
+  padding: 15px 18px;
   color: var(--text-color-light);
   margin-bottom: -1px;
   margin-left: -1px;
@@ -61,6 +61,12 @@
 .destinationsList {
   overflow-y: scroll;
   height: 100%;
+}
+
+.empty {
+  padding: 20px;
+  color: #888;
+  text-align: center;
 }
 
 .destinationCard, .destinationCardSelected {
@@ -112,4 +118,26 @@
 
 .both {
     background-color: var(--both-color);
+}
+
+.legend span.entrance {
+    background-color: var(--entrance-color);
+    border-radius: 2px;
+}
+
+/* Containing place cards: click to show that place's polygon on the map. */
+.containingCard, .containingCardSelected {
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--containing-color);
+  padding: 20px;
+  margin: 10px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.containingCard:hover,
+.containingCardSelected {
+  border-color: var(--containing-color);
+  box-shadow: 0 0 10px rgba(255, 140, 0, 0.5);
+  background-color: var(--card-hover-bg);
 }

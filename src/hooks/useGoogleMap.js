@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Loader } from "@googlemaps/js-api-loader";
 import { useMap } from '../context/MapContext';
 
@@ -18,17 +18,24 @@ const mapOptions = {
     fullscreenControl: false,
     zoom: 16.5,
     mapId: '9702a25b19eb451b',
+    internalUsageAttributionIds: ['gmp_git_agentskills_v1'],
 };
 
 export const useGoogleMap = (ref) => {
     const { setMap, setMarker } = useMap();
 
     useEffect(() => {
+        // StrictMode runs effects twice in development. The flag makes sure only
+        // the latest run creates a map, so we never end up with two maps on one div.
+        let cancelled = false;
+        let markerView;
+
         loader
             .load()
             .then(google => {
-                const map = new window.google.maps.Map(ref.current, mapOptions);
-                const markerView = new google.maps.marker.AdvancedMarkerElement({
+                if (cancelled || !ref.current) return;
+                const map = new google.maps.Map(ref.current, mapOptions);
+                markerView = new google.maps.marker.AdvancedMarkerElement({
                     map,
                     position: mapOptions.center,
                     title: 'Tokyo',
@@ -39,5 +46,12 @@ export const useGoogleMap = (ref) => {
             .catch(e => {
                 console.error(e);
             });
+
+        return () => {
+            cancelled = true;
+            if (markerView) markerView.map = null;
+            setMarker(null);
+            setMap(null);
+        };
     }, [ref, setMap, setMarker]);
 };
