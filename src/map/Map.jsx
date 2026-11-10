@@ -9,7 +9,7 @@ export const Map = () => {
     const [latLngText, setLatLngText] = useState('');
     const [latLngError, setLatLngError] = useState('');
     // Search input tab: 'place' (Autocomplete text search) or 'latlng'.
-    const [inputMode, setInputMode] = useState('place');
+    const [inputMode, setInputMode] = useState('latlng');
 
     // This hook handles map initialization
     useGoogleMap(ref);
