@@ -269,6 +269,8 @@ export const useGeocodingAPI = () => {
         if (!map || !displayPolygon) return;
         const polygon = new window.google.maps.Polygon({
             map,
+            // Let clicks fall through to the map (click-to-search).
+            clickable: false,
             paths: toLatLngPaths(displayPolygon),
             strokeColor: '#FF0000',
             strokeOpacity: 0.8,
@@ -334,6 +336,8 @@ export const useGeocodingAPI = () => {
             .filter((subDestination) => subDestination.displayPolygon?.coordinates)
             .map((subDestination) => new window.google.maps.Polygon({
                 map,
+                // Let clicks fall through to the map (click-to-search).
+                clickable: false,
                 paths: toLatLngPaths(subDestination.displayPolygon),
                 strokeColor: '#FF00FF',
                 strokeOpacity: 0.8,
@@ -352,6 +356,8 @@ export const useGeocodingAPI = () => {
         const paths = toLatLngPaths(place.displayPolygon);
         const polygon = new window.google.maps.Polygon({
             map,
+            // Let clicks fall through to the map (click-to-search).
+            clickable: false,
             paths,
             strokeColor: '#FF8C00',
             strokeOpacity: 0.9,

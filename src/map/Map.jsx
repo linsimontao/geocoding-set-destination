@@ -1,5 +1,6 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import styles from './Map.module.css';
+import { useMap } from '../context/MapContext';
 import { useGoogleMap } from '../hooks/useGoogleMap';
 import { useGeocodingAPI, parseLatLng } from '../hooks/useGeocodingAPI';
 
@@ -13,6 +14,23 @@ export const Map = () => {
 
     // This hook handles all API calls, drawing, and interactions
     const { searchByLatLng } = useGeocodingAPI();
+    const { map } = useMap();
+
+    // Clicking the map searches destinations at the clicked lat,lng
+    // and fills the coordinate input with it.
+    useEffect(() => {
+        if (!map) return;
+        const listener = map.addListener('click', (evt) => {
+            if (!evt.latLng) return;
+            // Clicking a POI icon would open Google's default info window; suppress it.
+            if (evt.placeId) evt.stop();
+            const latLng = { lat: evt.latLng.lat(), lng: evt.latLng.lng() };
+            setLatLngText(`${latLng.lat.toFixed(7)},${latLng.lng.toFixed(7)}`);
+            setLatLngError('');
+            searchByLatLng(latLng);
+        });
+        return () => listener.remove();
+    }, [map, searchByLatLng]);
 
     const handleLatLngSubmit = (evt) => {
         evt.preventDefault();
@@ -31,7 +49,7 @@ export const Map = () => {
                 <p>Search for a place here:</p>
                 {/* The PlaceAutocompleteElement is appended here by useGeocodingAPI */}
                 <div id="place-autocomplete-container" />
-                <p>Or enter coordinates (lat,lng):</p>
+                <p>Or enter coordinates (lat,lng), or click on the map:</p>
                 <form className={styles.latLngForm} onSubmit={handleLatLngSubmit}>
                     <input
                         className={styles.latLngInput}
